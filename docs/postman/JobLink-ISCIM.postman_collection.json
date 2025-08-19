@@ -1,0 +1,90 @@
+{
+  "info": {
+    "name": "JobLink ISCIM API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth / Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"]},
+        "body": {"mode": "raw", "raw": "{\n  \"name\": \"Ana\",\n  \"email\": \"ana@example.com\",\n  \"password\": \"password\"\n}"}
+      }
+    },
+    {
+      "name": "Auth / Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"]},
+        "body": {"mode": "raw", "raw": "{\n  \"email\": \"ana@example.com\",\n  \"password\": \"password\"\n}"}
+      }
+    },
+    {
+      "name": "Profile / Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {"raw": "{{base_url}}/api/user", "host": ["{{base_url}}"], "path": ["api","user"]}
+      }
+    },
+    {
+      "name": "Companies / List",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{base_url}}/api/companies", "host": ["{{base_url}}"], "path": ["api","companies"]}
+      }
+    },
+    {
+      "name": "Companies / Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {"raw": "{{base_url}}/api/companies", "host": ["{{base_url}}"], "path": ["api","companies"]},
+        "body": {"mode": "raw", "raw": "{\n  \"name\": \"ISCIM Tech\"\n}"}
+      }
+    },
+    {
+      "name": "Jobs / List",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{base_url}}/api/jobs", "host": ["{{base_url}}"], "path": ["api","jobs"]}
+      }
+    },
+    {
+      "name": "Jobs / Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {"raw": "{{base_url}}/api/jobs", "host": ["{{base_url}}"], "path": ["api","jobs"]},
+        "body": {"mode": "raw", "raw": "{\n  \"company_id\": 1,\n  \"title\": \"Estágio Mobile\",\n  \"description\": \"Flutter\",\n  \"type\": \"internship\"\n}"}
+      }
+    },
+    {
+      "name": "Applications / Mine",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {"raw": "{{base_url}}/api/applications", "host": ["{{base_url}}"], "path": ["api","applications"]}
+      }
+    }
+  ]
+}
+
+
