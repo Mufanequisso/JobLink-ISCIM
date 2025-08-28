@@ -18,7 +18,7 @@ const schema = yup.object({
   graduation_year: yup.number().optional().min(1900).max(new Date().getFullYear() + 10),
   employment_status: yup.string().oneOf(['employed', 'seeking', 'entrepreneur', 'other']).optional(),
   bio: yup.string().optional(),
-}).required();
+});
 
 const employmentStatusOptions = [
   { value: 'employed', label: 'Empregado' },
@@ -37,11 +37,11 @@ const Register: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<RegisterRequest>({
+  } = useForm({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data: RegisterRequest) => {
+  const onSubmit = async (data: any) => {
     setIsLoading(true);
     setError('');
     setSuccess('');
@@ -50,11 +50,11 @@ const Register: React.FC = () => {
       const response = await authService.register(data);
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
-      setSuccess('Cadastro realizado com sucesso! Redirecionando...');
+      setSuccess('Cadastro realizado com sucesso! Redirecionando para login...');
       
-      // Redirecionar após 2 segundos
+      // Redirecionar para login após 2 segundos
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = '/login';
       }, 2000);
     } catch (err: any) {
       if (err.response?.data?.message) {
