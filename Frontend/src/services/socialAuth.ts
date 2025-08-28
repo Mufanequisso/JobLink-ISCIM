@@ -26,7 +26,6 @@ function mapFirebaseUser(user: any): SocialUser {
 }
 
 function shouldFallbackToRedirect(errorCode: string): boolean {
-  // Erros comuns que justificam fallback para redirect em vez de popup
   return (
     errorCode === 'auth/popup-blocked' ||
     errorCode === 'auth/popup-closed-by-user' ||
@@ -42,8 +41,11 @@ function withConfigHelp(message: string, code?: string) {
   return message;
 }
 
+function socialPassword(uid: string): string {
+  return `social_${uid}`;
+}
+
 export const socialAuthService = {
-  // Login com Google usando popup
   async signInWithGoogle(): Promise<SocialUser> {
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -55,7 +57,6 @@ export const socialAuthService = {
     }
   },
 
-  // Login com Google com fallback automático para redirect
   async smartSignInWithGoogle(): Promise<SocialUser | null> {
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -64,14 +65,13 @@ export const socialAuthService = {
       const code: string = error?.code || '';
       if (shouldFallbackToRedirect(code)) {
         await signInWithRedirect(auth, googleProvider);
-        return null; // fluxo continuará no getRedirectResult()
+        return null;
       }
       const message = withConfigHelp(error?.message || 'Erro no login com Google', code);
       throw new Error(code ? `${code}: ${message}` : message);
     }
   },
 
-  // Login com Google usando redirect (para dispositivos móveis)
   async signInWithGoogleRedirect(): Promise<void> {
     try {
       await signInWithRedirect(auth, googleProvider);
@@ -82,7 +82,6 @@ export const socialAuthService = {
     }
   },
 
-  // Verificar resultado do redirect
   async getRedirectResult(): Promise<SocialUser | null> {
     try {
       const result = await getRedirectResult(auth);
@@ -97,44 +96,20 @@ export const socialAuthService = {
     }
   },
 
-  // Registrar usuário social no backend
+  // Upsert + login via backend em um único passo
   async registerSocialUser(socialUser: SocialUser): Promise<AuthResponse> {
-    try {
-      // Gerar senha temporária para usuários sociais
-      const tempPassword = `social_${socialUser.uid}_${Date.now()}`;
-      
-      const userData = {
-        name: socialUser.displayName,
-        email: socialUser.email,
-        password: tempPassword,
-        password_confirmation: tempPassword,
-        social_id: socialUser.uid,
-        social_provider: socialUser.provider,
-        profile_picture: socialUser.photoURL
-      };
-
-      return await authService.register(userData);
-    } catch (error: any) {
-      throw new Error(`Erro ao registrar usuário social: ${error.message}`);
-    }
+    const password = socialPassword(socialUser.uid);
+    return await authService.social({
+      name: socialUser.displayName,
+      email: socialUser.email,
+      password,
+      password_confirmation: password,
+    });
   },
 
-  // Login rápido com usuário social
   async quickSocialLogin(socialUser: SocialUser): Promise<AuthResponse> {
-    try {
-      // Tentar fazer login primeiro
-      try {
-        return await authService.login({
-          email: socialUser.email,
-          password: `social_${socialUser.uid}_${Date.now()}`
-        });
-      } catch (error) {
-        // Se não existir, registrar o usuário
-        return await this.registerSocialUser(socialUser);
-      }
-    } catch (error: any) {
-      throw new Error(`Erro no login rápido social: ${error.message}`);
-    }
+    // Usa o endpoint social para garantir criação/atualização e login
+    return await this.registerSocialUser(socialUser);
   }
 };
 

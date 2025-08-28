@@ -43,6 +43,11 @@ export const authService = {
     return response.data;
   },
 
+  async social(userData: Partial<RegisterRequest> & { password: string }): Promise<AuthResponse> {
+    const response = await api.post('/auth/social', userData);
+    return response.data;
+  },
+
   async logout(): Promise<void> {
     await api.post('/auth/logout');
     localStorage.removeItem('token');

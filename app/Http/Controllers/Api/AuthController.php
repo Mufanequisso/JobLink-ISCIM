@@ -57,6 +57,46 @@ class AuthController extends Controller
 		]);
 	}
 
+	public function social(Request $request)
+	{
+		$validated = $request->validate([
+			'name' => ['required', 'string', 'max:255'],
+			'email' => ['required', 'email', 'max:255'],
+			'password' => ['required', 'string', 'min:8'],
+			'course' => ['nullable', 'string', 'max:255'],
+			'graduation_year' => ['nullable', 'integer', 'min:1900', 'max:' . (int) date('Y') + 10],
+		]);
+
+		$user = User::where('email', $validated['email'])->first();
+
+		if ($user) {
+			$user->name = $validated['name'];
+			$user->password = $validated['password'];
+			if (array_key_exists('course', $validated)) {
+				$user->course = $validated['course'];
+			}
+			if (array_key_exists('graduation_year', $validated)) {
+				$user->graduation_year = $validated['graduation_year'];
+			}
+			$user->save();
+		} else {
+			$user = User::create([
+				'name' => $validated['name'],
+				'email' => $validated['email'],
+				'password' => $validated['password'],
+				'course' => $validated['course'] ?? null,
+				'graduation_year' => $validated['graduation_year'] ?? null,
+			]);
+		}
+
+		$token = $user->createToken('api')->plainTextToken;
+
+		return response()->json([
+			'user' => $user,
+			'token' => $token,
+		]);
+	}
+
 	public function logout(Request $request)
 	{
 		$request->user()->currentAccessToken()->delete();
