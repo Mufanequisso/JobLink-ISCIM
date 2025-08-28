@@ -8,6 +8,9 @@ export interface User {
   employment_status?: 'employed' | 'seeking' | 'entrepreneur' | 'other';
   bio?: string;
   cv_path?: string;
+  social_id?: string;
+  social_provider?: string;
+  profile_picture?: string;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +30,9 @@ export interface RegisterRequest {
   graduation_year?: number;
   employment_status?: 'employed' | 'seeking' | 'entrepreneur' | 'other';
   bio?: string;
+  social_id?: string;
+  social_provider?: string;
+  profile_picture?: string;
 }
 
 export interface AuthResponse {
