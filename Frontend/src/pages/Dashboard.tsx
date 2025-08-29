@@ -128,7 +128,7 @@ const Dashboard: React.FC = () => {
         {/* ===== CAROUSEL COM FOTOS ===== */}
         <div className="carousel-container">
           <div className="carousel-slide" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
-            {carouselItems.map((item, index) => (
+            {carouselItems.map((item, _index) => (
               <div key={item.id} className="carousel-item">
                 <div 
                   className="carousel-image"

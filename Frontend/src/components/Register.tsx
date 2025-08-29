@@ -1,322 +1,219 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { User, Mail, Lock, Phone, GraduationCap, Calendar, UserCheck, FileText } from 'lucide-react';
-import { authService } from '../services/api';
-import type { RegisterRequest } from '../types';
+// src/pages/Dashboard.tsx
+import React, { useEffect, useState } from 'react';
+import JobCard from '../components/JobCard';
+import FilterBar from '../components/FilterBar';
+import Navbar from '../components/Navbar';
+import axios from 'axios';
+import '../styles/Dashboard.css';
 
-const schema = yup.object({
-  name: yup.string().required('Nome é obrigatório'),
-  email: yup.string().email('Email inválido').required('Email é obrigatório'),
-  password: yup.string().min(8, 'Senha deve ter pelo menos 8 caracteres').required('Senha é obrigatória'),
-  password_confirmation: yup.string()
-    .oneOf([yup.ref('password')], 'Senhas devem ser iguais')
-    .required('Confirmação de senha é obrigatória'),
-  phone: yup.string().optional(),
-  course: yup.string().optional(),
-  graduation_year: yup.number().optional().min(1900).max(new Date().getFullYear() + 10),
-  employment_status: yup.string().oneOf(['employed', 'seeking', 'entrepreneur', 'other']).optional(),
-  bio: yup.string().optional(),
-}).required();
+interface Company {
+  id: number;
+  name: string;
+  website: string;
+  email: string;
+  description: string;
+}
 
-const employmentStatusOptions = [
-  { value: 'employed', label: 'Empregado' },
-  { value: 'seeking', label: 'À procura de emprego' },
-  { value: 'entrepreneur', label: 'Empreendedor' },
-  { value: 'other', label: 'Outro' },
+interface Job {
+  id: number;
+  title: string;
+  company: Company;
+  type: string;
+  location: string;
+}
+
+// Dados do carousel com imagens
+const carouselItems = [
+  {
+    id: 1,
+    title: "Conecte-se com o mercado de emprego",
+    description: "Encontre oportunidades perto de você e conecte-se com empresas locais.",
+    image: "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    id: 2,
+    title: "Cadastre-se e receba alertas",
+    description: "Mantenha-se atualizado com novas vagas e oportunidades na sua área.",
+    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    id: 3,
+    title: "Mostre seu talento",
+    description: "Crie seu perfil e destaque suas habilidades para empresas da sua região.",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    id: 4,
+    title: "Diversas oportunidades",
+    description: "Encontre vagas em diferentes áreas and níveis de experiência.",
+    image: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    id: 5,
+    title: "Networking profissional",
+    description: "Conecte-se com outros profissionais e expanda sua rede de contatos.",
+    image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+  }
 ];
 
-const Register: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
+const Dashboard: React.FC = () => {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [search, setSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(6);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<RegisterRequest>({
-    resolver: yupResolver(schema),
-  });
+  useEffect(() => {
+    axios
+      .get('http://localhost:8000/api/jobs')
+      .then(res => {
+        if (Array.isArray(res.data.data)) {
+          const jobsWithLocation = res.data.data.map((job: any) => ({
+            ...job,
+            location: job.location || 'Não especificado',
+          }));
+          setJobs(jobsWithLocation);
+        } else {
+          console.error('Resposta da API inesperada:', res.data);
+        }
+      })
+      .catch(err => console.error(err))
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  const onSubmit = async (data: RegisterRequest) => {
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
+  // Efeito para rotacionar automaticamente o carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselItems.length);
+    }, 5000); // Muda a cada 5 segundos
 
-    try {
-      const response = await authService.register(data);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setSuccess('Cadastro realizado com sucesso! Redirecionando...');
-      
-      // Redirecionar após 2 segundos
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 2000);
-    } catch (err: any) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.data?.errors) {
-        const errorMessages = Object.values(err.response.data.errors).flat();
-        setError(errorMessages.join(', '));
-      } else {
-        setError('Erro ao realizar cadastro. Tente novamente.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    return () => clearInterval(interval);
+  }, [carouselItems.length]);
+
+  const filteredJobs = Array.isArray(jobs)
+    ? jobs.filter(job =>
+        job.title.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
+
+  const handleShowMore = () => {
+    setVisibleCount(prev => prev + 6);
   };
 
+  const handleShowLess = () => {
+    setVisibleCount(prev => Math.max(6, prev - 6));
+  };
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % carouselItems.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + carouselItems.length) % carouselItems.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="loading-container pt-20 flex flex-col items-center justify-center min-h-screen">
+        <div className="loading-spinner w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+        <div className="loading-text text-gray-700 text-lg font-medium">Carregando vagas...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Criar Conta
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Junte-se ao JobLink ISCIM
-          </p>
+    <>
+      <Navbar />
+      
+      {/* Espaço para a navbar fixa */}
+      <div className="navbar-spacer"></div>
+
+      <div className="main-content">
+        {/* ===== CAROUSEL COM FOTOS ===== */}
+        <div className="carousel-container">
+          <div className="carousel-slide" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+            {carouselItems.map((item) => (
+              <div key={item.id} className="carousel-item">
+                <div 
+                  className="carousel-image"
+                  style={{ backgroundImage: `url(${item.image})` }}
+                >
+                  <div className="carousel-overlay"></div>
+                  <div className="carousel-content">
+                    <h2>{item.title}</h2>
+                    <p>{item.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Controles do carousel */}
+          <button className="carousel-prev" onClick={prevSlide}>‹</button>
+          <button className="carousel-next" onClick={nextSlide}>›</button>
+          
+          {/* Indicadores */}
+          <div className="carousel-indicators">
+            {carouselItems.map((_, index) => (
+              <button
+                key={index}
+                className={`carousel-indicator ${index === currentSlide ? 'active' : ''}`}
+                onClick={() => goToSlide(index)}
+              />
+            ))}
+          </div>
         </div>
 
-        <div className="card">
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            {/* Informações Pessoais */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                Informações Pessoais
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Nome */}
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Nome Completo *
-                  </label>
-                  <div className="mt-1 relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      {...register('name')}
-                      type="text"
-                      className="input-field pl-10"
-                      placeholder="Digite seu nome completo"
-                    />
-                  </div>
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-error">{errors.name.message}</p>
-                  )}
-                </div>
+        <div className="dashboard-container pt-8">
+          <FilterBar search={search} setSearch={setSearch} />
 
-                {/* Email */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email *
-                  </label>
-                  <div className="mt-1 relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      {...register('email')}
-                      type="email"
-                      className="input-field pl-10"
-                      placeholder="seu@email.com"
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-error">{errors.email.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Telefone */}
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                    Telefone
-                  </label>
-                  <div className="mt-1 relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      {...register('phone')}
-                      type="tel"
-                      className="input-field pl-10"
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                </div>
-
-                {/* Curso */}
-                <div>
-                  <label htmlFor="course" className="block text-sm font-medium text-gray-700">
-                    Curso
-                  </label>
-                  <div className="mt-1 relative">
-                    <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      {...register('course')}
-                      type="text"
-                      className="input-field pl-10"
-                      placeholder="Ex: Ciência da Computação"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Ano de Graduação */}
-                <div>
-                  <label htmlFor="graduation_year" className="block text-sm font-medium text-gray-700">
-                    Ano de Graduação
-                  </label>
-                  <div className="mt-1 relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      {...register('graduation_year', { valueAsNumber: true })}
-                      type="number"
-                      className="input-field pl-10"
-                      placeholder="2024"
-                      min="1900"
-                      max={new Date().getFullYear() + 10}
-                    />
-                  </div>
-                </div>
-
-                {/* Status de Emprego */}
-                <div>
-                  <label htmlFor="employment_status" className="block text-sm font-medium text-gray-700">
-                    Status de Emprego
-                  </label>
-                  <div className="mt-1 relative">
-                    <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <select
-                      {...register('employment_status')}
-                      className="input-field pl-10"
-                    >
-                      <option value="">Selecione um status</option>
-                      {employmentStatusOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
+          {filteredJobs.length === 0 ? (
+            <div className="no-jobs-message">
+              <div className="no-jobs-icon">🔍</div>
+              <p>Nenhuma vaga encontrada.</p>
             </div>
-
-            {/* Segurança */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                Segurança
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Senha */}
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Senha *
-                  </label>
-                  <div className="mt-1 relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      {...register('password')}
-                      type="password"
-                      className="input-field pl-10"
-                      placeholder="Mínimo 8 caracteres"
+          ) : (
+            <>
+              <div className="jobs-grid">
+                {filteredJobs.slice(0, visibleCount).map((job, index) => (
+                  <div
+                    key={job.id}
+                    className="job-card"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <JobCard
+                      title={job.title}
+                      company={job.company.name}
+                      type={job.type}
+                      location={job.location}
                     />
                   </div>
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-error">{errors.password.message}</p>
-                  )}
-                </div>
-
-                {/* Confirmação de Senha */}
-                <div>
-                  <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
-                    Confirmar Senha *
-                  </label>
-                  <div className="mt-1 relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      {...register('password_confirmation')}
-                      type="password"
-                      className="input-field pl-10"
-                      placeholder="Confirme sua senha"
-                    />
-                  </div>
-                  {errors.password_confirmation && (
-                    <p className="mt-1 text-sm text-error">{errors.password_confirmation.message}</p>
-                  )}
-                </div>
+                ))}
               </div>
-            </div>
 
-            {/* Biografia */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                Sobre Você
-              </h3>
-              
-              <div>
-                <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-                  Biografia
-                </label>
-                <div className="mt-1 relative">
-                  <FileText className="absolute left-3 top-3 text-gray-400 h-5 w-5" />
-                  <textarea
-                    {...register('bio')}
-                    rows={4}
-                    className="input-field pl-10 resize-none"
-                    placeholder="Conte um pouco sobre você, suas experiências, interesses..."
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Mensagens de erro e sucesso */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                {success}
-              </div>
-            )}
-
-            {/* Botão de Submit */}
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-primary w-full flex justify-center items-center py-3 text-lg font-medium"
-              >
-                {isLoading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                ) : (
-                  'Criar Conta'
+              <div className="buttons-container">
+                {visibleCount < filteredJobs.length && (
+                  <button className="show-more-btn" onClick={handleShowMore}>
+                    Ver mais
+                  </button>
                 )}
-              </button>
-            </div>
-
-            {/* Link para Login */}
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Já tem uma conta?{' '}
-                <a href="/login" className="font-medium text-primary hover:text-blue-700">
-                  Faça login
-                </a>
-              </p>
-            </div>
-          </form>
+                
+                {visibleCount > 6 && (
+                  <button className="show-less-btn" onClick={handleShowLess}>
+                    Ver menos
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
-export default Register;
+export default Dashboard;
