@@ -15,7 +15,7 @@ Route::prefix('auth')->group(function () {
 	Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'user.status'])->group(function () {
 	// Profile
 	Route::get('user', [ProfileController::class, 'me']);
 	Route::put('user', [ProfileController::class, 'update']);
@@ -41,5 +41,14 @@ Route::get('jobs/{job}/applications', [ApplicationController::class, 'forJob'])-
 
 // Stats
 Route::get('stats/employment', [StatsController::class, 'employment']);
+
+// Admin routes
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    Route::get('users', [ProfileController::class, 'allUsers']);
+    Route::put('users/{id}', [ProfileController::class, 'updateUser']);
+    Route::patch('users/{id}/toggle-status', [ProfileController::class, 'toggleUserStatus']);
+    Route::delete('users/{id}', [ProfileController::class, 'deleteUser']);
+    Route::get('stats', [StatsController::class, 'adminStats']);
+});
 
 

@@ -49,6 +49,16 @@ class AuthController extends Controller
 
 		/** @var User $user */
 		$user = $request->user();
+		
+		// Verificar se o usuário está ativo
+		if (!$user->is_active) {
+			Auth::logout();
+			return response()->json(['message' => 'Sua conta foi desativada. Entre em contato com o administrador.'], 403);
+		}
+		
+		// Atualizar último login
+		$user->update(['last_login_at' => now()]);
+		
 		$token = $user->createToken('api')->plainTextToken;
 
 		return response()->json([

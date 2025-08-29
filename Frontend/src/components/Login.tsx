@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Mail, Lock } from 'lucide-react';
-import { authService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { socialAuthService } from '../services/socialAuth';
 import type { LoginRequest } from '../types';
 
@@ -13,6 +14,8 @@ const schema = yup.object({
 }).required();
 
 const Login: React.FC = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -65,12 +68,9 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const response = await authService.login(data);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      
-      // Redirecionar para dashboard após login bem-sucedido
-      window.location.href = '/dashboard';
+      await login(data.email, data.password);
+      // O redirecionamento será feito automaticamente pelo contexto
+      // baseado no role do usuário
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);
