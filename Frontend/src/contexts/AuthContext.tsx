@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '../types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { User } from '../types';
 import { authService } from '../services/api';
 
 interface AuthContextType {
@@ -7,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
+  socialLogin: (userData: any) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -70,6 +72,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const socialLogin = async (userData: any) => {
+    try {
+      const response = await authService.social(userData);
+      setUser(response.user);
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      // Redirecionar baseado no role
+      if (response.user.role === 'admin') {
+        window.location.href = '/admin';
+      } else {
+        window.location.href = '/jobs';
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await authService.logout();
@@ -87,6 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     isAdmin,
     login,
+    socialLogin,
     logout,
     loading,
   };

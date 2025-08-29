@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { User, AdminUserUpdate } from '../types';
+import type { User, AdminUserUpdate } from '../types';
 import api from '../services/api';
 
 const AdminDashboard: React.FC = () => {
