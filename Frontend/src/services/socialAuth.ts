@@ -1,55 +1,55 @@
 // src/services/socialAuth.ts
+import type { AuthResponse, User } from '../types';
+
+// Simulação de serviço de autenticação social
 export const socialAuthService = {
-  // Método para obter resultado do redirect social
+  // Simular resultado de redirect
   getRedirectResult: async (): Promise<any> => {
-    try {
-      // Implementação real para verificar resultado de redirect
-      // Exemplo com Firebase ou outra biblioteca de autenticação
-      return null;
-    } catch (error) {
-      console.error('Erro ao obter resultado do redirect:', error);
-      throw error;
-    }
+    return null;
   },
 
-  // Método para login social rápido
-  quickSocialLogin: async (socialUser: any): Promise<{ token: string; user: any }> => {
-    try {
-      // Implementação real para login social
-      // Normalmente faria uma requisição para o backend
-      const response = await fetch('http://localhost:8000/api/auth/social/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(socialUser),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro no login social');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Erro no login social:', error);
-      throw error;
-    }
+  // Simular login social rápido
+  quickSocialLogin: async (socialUser: any): Promise<AuthResponse> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          token: 'social-auth-token-' + Date.now(),
+          user: {
+            id: Math.floor(Math.random() * 1000),
+            name: socialUser.name || 'Usuário Social',
+            email: socialUser.email || 'social@email.com',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        });
+      }, 1000);
+    });
   },
 
-  // Método para login com Google
+  // Adicionar o método registerSocialUser que estava faltando
+  registerSocialUser: async (socialUser: any): Promise<AuthResponse> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          token: 'social-register-token-' + Date.now(),
+          user: {
+            id: Math.floor(Math.random() * 1000),
+            name: socialUser.name || 'Usuário Social Registrado',
+            email: socialUser.email || 'social-register@email.com',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        });
+      }, 1000);
+    });
+  },
+
+  // Simular login com Google
   smartSignInWithGoogle: async (): Promise<any> => {
-    try {
-      // Implementação real para login com Google
-      // Exemplo com Firebase Auth ou Google Sign-In
-      console.log('Iniciando login com Google...');
-      
-      // Simulação - em uma implementação real, isso redirecionaria
-      // ou abriria um popup para autenticação
-      return null;
-    } catch (error) {
-      console.error('Erro no login com Google:', error);
-      throw error;
-    }
-  },
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(null);
+      }, 500);
+    });
+  }
 };

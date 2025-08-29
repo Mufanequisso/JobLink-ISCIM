@@ -1,3 +1,4 @@
+// src/types/index.ts
 export interface User {
   id: number;
   name: string;
@@ -38,3 +39,6 @@ export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
 }
+
+// Exportações do socialAuth
+export * from './socialAuth';

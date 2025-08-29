@@ -8,7 +8,7 @@ import { authService } from '../services/api';
 import { socialAuthService } from '../services/socialAuth';
 import type { LoginRequest } from '../types';
 import { useNavigate } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
 // Definir o tipo dos valores do formulário
 interface LoginFormValues {
   email: string;
@@ -231,9 +231,9 @@ const Login: React.FC = () => {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Não tem uma conta?{' '}
-                <a href="/register" className="font-medium text-primary hover:text-blue-700">
-                  Cadastre-se
-                </a>
+                <Link to="/register" className="font-medium text-primary hover:text-blue-700">
+  Cadastre-se
+</Link>
               </p>
             </div>
           </form>

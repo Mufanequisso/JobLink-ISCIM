@@ -9,7 +9,7 @@
 
 /* ===== BODY ===== */
 body {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #faf9f8 0%, #ece9e7 100%);
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -33,7 +33,7 @@ body {
   margin: 20px auto;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 25px rgba(255, 148, 8, 0.89);
 }
 
 .carousel-slide {
@@ -66,8 +66,8 @@ body {
   bottom: 0;
   background: linear-gradient(
     135deg,
-    rgba(102, 126, 234, 0.85) 0%,
-    rgba(118, 75, 162, 0.85) 100%
+    rgba(196, 114, 46, 0.85) 0%,
+    rgba(228, 224, 8, 0.85) 100%
   );
 }
 
@@ -175,9 +175,9 @@ body {
   flex-direction: column;
   align-items: center;
   box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 20px 25px -5px rgba(15, 211, 9, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(235, 164, 11, 0.932);
 }
 
 /* ===== FILTER BAR ===== */
@@ -218,9 +218,9 @@ body {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   padding: 24px;
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(230, 126, 8, 0.897);
   transition: all 0.4s ease;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 6px -1px rgba(238, 255, 4, 0.911), 0 2px 4px -1px rgba(0,0,0,0.06);
   position: relative;
   overflow: hidden;
   animation: fadeInUp 0.6s ease-out;
@@ -233,7 +233,7 @@ body {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: linear-gradient(90deg, #e99802, #92a24b);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -248,7 +248,7 @@ body {
   opacity: 1;
 }
 
-.job-title { font-weight:600; font-size:1.25rem; color:#1f2937; margin-bottom:8px; }
+.job-title { font-weight:600; font-size:1.25rem; color:#000000; margin-bottom:8px; }
 .company-info { color:#6b7280; font-size:0.95rem; font-weight:500; margin-bottom:12px; }
 .job-tags { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
 .job-tag { background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; padding:6px 12px; border-radius:20px; font-size:0.85rem; font-weight:500; text-transform:capitalize; }
@@ -288,7 +288,7 @@ body {
   font-size:1rem;
   font-weight:600;
   color:#fff;
-  background: linear-gradient(135deg,#667eea,#764ba2);
+  background: linear-gradient(135deg,#ffbc02,#eafa09e3);
   border:none;
   border-radius:12px;
   cursor:pointer;
@@ -305,9 +305,9 @@ body {
   padding: 12px 24px;
   font-size:1rem;
   font-weight:600;
-  color:#764ba2;
+  color:#fa9703;
   background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #764ba2;
+  border: 2px solid #e26a07;
   border-radius:12px;
   cursor:pointer;
   transition: all 0.3s ease;
