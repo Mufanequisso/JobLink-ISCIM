@@ -2,6 +2,10 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  role: 'user' | 'admin';
+  is_active: boolean;
+  last_login_at?: string;
+  admin_notes?: string;
   phone?: string;
   course?: string;
   graduation_year?: number;
@@ -13,6 +17,12 @@ export interface User {
   profile_picture?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface AdminUserUpdate {
+  role?: 'user' | 'admin';
+  is_active?: boolean;
+  admin_notes?: string;
 }
 
 export interface LoginRequest {

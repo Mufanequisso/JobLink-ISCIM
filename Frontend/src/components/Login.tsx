@@ -1,29 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { Mail, Lock } from 'lucide-react';
-import { authService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { socialAuthService } from '../services/socialAuth';
-import type { LoginRequest } from '../types';
-
-const schema = yup.object({
-  email: yup.string().email('Email inválido').required('Email é obrigatório'),
-  password: yup.string().required('Senha é obrigatória'),
-}).required();
 
 const Login: React.FC = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
   const [error, setError] = useState<string>('');
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginRequest>({
-    resolver: yupResolver(schema),
-  });
 
   // Verificar resultado de redirect social ao carregar o componente
   useEffect(() => {
@@ -31,7 +18,7 @@ const Login: React.FC = () => {
       try {
         const socialUser = await socialAuthService.getRedirectResult();
         if (socialUser) {
-          await handleSocialLogin(socialUser);
+          await handleSocialLoginResult(socialUser);
         }
       } catch (error: any) {
         console.error('Erro ao verificar redirect social:', error);
@@ -42,35 +29,30 @@ const Login: React.FC = () => {
     checkSocialRedirect();
   }, []);
 
-  const handleSocialLogin = async (socialUser: any) => {
-    setIsSocialLoading(true);
-    setError('');
-
+  const handleSocialLoginResult = async (socialUser: any) => {
     try {
+      setIsSocialLoading(true);
+      setError('');
       const response = await socialAuthService.quickSocialLogin(socialUser);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      
-      // Redirecionar para dashboard após login bem-sucedido
-      window.location.href = '/dashboard';
+      // O contexto de autenticação será atualizado automaticamente
+      // através do localStorage que já foi definido no quickSocialLogin
+      window.location.reload(); // Recarregar para atualizar o contexto
     } catch (err: any) {
-      setError(err?.message || 'Erro na autenticação social');
+      setError(err?.message || 'Erro no login social');
     } finally {
       setIsSocialLoading(false);
     }
   };
 
-  const onSubmit = async (data: LoginRequest) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await authService.login(data);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      
-      // Redirecionar para dashboard após login bem-sucedido
-      window.location.href = '/dashboard';
+      await login(email, password);
+      // O redirecionamento será feito automaticamente pelo contexto
+      // baseado no role do usuário
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);
@@ -85,8 +67,27 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleSocialLogin = async () => {
+    try {
+      setIsSocialLoading(true);
+      setError('');
+      const socialUser = await socialAuthService.smartSignInWithGoogle();
+      if (socialUser) {
+        // Processar login social
+        const response = await socialAuthService.quickSocialLogin(socialUser);
+        // O contexto de autenticação será atualizado automaticamente
+        // através do localStorage que já foi definido no quickSocialLogin
+        window.location.reload(); // Recarregar para atualizar o contexto
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Erro no login com Google');
+    } finally {
+      setIsSocialLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
@@ -97,7 +98,7 @@ const Login: React.FC = () => {
           </p>
         </div>
 
-        <div className="card">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {/* Botões de Autenticação Social */}
           <div className="space-y-4 mb-6">
             <div className="text-center">
@@ -107,25 +108,9 @@ const Login: React.FC = () => {
             {/* Botão Google */}
             <button
               type="button"
-              onClick={async () => {
-                try {
-                  setIsSocialLoading(true);
-                  setError('');
-                  const socialUser = await socialAuthService.smartSignInWithGoogle();
-                  // Se for redirect, socialUser será null e o fluxo continua no useEffect
-                  if (socialUser) {
-                    await handleSocialLogin(socialUser);
-                  } else {
-                    // Redirect iniciado com sucesso
-                  }
-                } catch (err: any) {
-                  setError(err?.message || 'Erro no login com Google');
-                } finally {
-                  setIsSocialLoading(false);
-                }
-              }}
+              onClick={handleSocialLogin}
               disabled={isSocialLoading}
-              className="w-full flex justify-center items-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+              className="w-full flex justify-center items-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {isSocialLoading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700"></div>
@@ -137,7 +122,7 @@ const Login: React.FC = () => {
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  Continuar com Google
+                  Entrar com Google
                 </>
               )}
             </button>
@@ -153,24 +138,25 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email
               </label>
-              <div className="mt-1 relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <div className="mt-1">
                 <input
-                  {...register('email')}
+                  id="email"
+                  name="email"
                   type="email"
-                  className="input-field pl-10"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="seu@email.com"
                 />
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-error">{errors.email.message}</p>
-              )}
             </div>
 
             {/* Senha */}
@@ -178,18 +164,19 @@ const Login: React.FC = () => {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Senha
               </label>
-              <div className="mt-1 relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <div className="mt-1">
                 <input
-                  {...register('password')}
+                  id="password"
+                  name="password"
                   type="password"
-                  className="input-field pl-10"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Digite sua senha"
                 />
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-error">{errors.password.message}</p>
-              )}
             </div>
 
             {/* Mensagem de erro */}
@@ -204,13 +191,9 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="btn-primary w-full flex justify-center items-center py-3 text-lg font-medium"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                {isLoading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                ) : (
-                  'Entrar'
-                )}
+                {isLoading ? 'Entrando...' : 'Entrar'}
               </button>
             </div>
 
@@ -218,7 +201,7 @@ const Login: React.FC = () => {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Não tem uma conta?{' '}
-                <a href="/register" className="font-medium text-primary hover:text-blue-700">
+                <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
                   Cadastre-se
                 </a>
               </p>
