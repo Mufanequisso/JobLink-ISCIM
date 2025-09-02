@@ -16,6 +16,14 @@ interface Job {
   experience?: string;
 }
 
+interface ApplicationFormData {
+  name: string;
+  email: string;
+  phone: string;
+  resume: File | null;
+  coverLetter: string;
+}
+
 const Jobs: React.FC = () => {
   const { user, logout } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -23,6 +31,17 @@ const Jobs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
+  const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
+  const [showDetails, setShowDetails] = useState<number | null>(null);
+  const [showApplicationForm, setShowApplicationForm] = useState<number | null>(null);
+  const [applicationData, setApplicationData] = useState<ApplicationFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    resume: null,
+    coverLetter: ''
+  });
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     // Simular busca de vagas
@@ -50,7 +69,7 @@ const Jobs: React.FC = () => {
             location: 'Remoto',
             type: 'full-time',
             salary: 'R$ 6.000 - R$ 9.000',
-            description: 'Criação de interfaces intuitivas e experiências de usuário excepcionais. Trabalhe com produtos digitais inovadores em um ambiente colaborativo e criativo.',
+            description: 'Criação de interfaces intuitivas e experiências de usuão excepcionais. Trabalhe com produtos digitais inovadores em um ambiente colaborativo e criativo.',
             requirements: ['Figma', 'Adobe Creative Suite', 'Design Thinking', '2+ anos de experiência'],
             created_at: '2025-01-01T00:00:00.000000Z',
             isRemote: true,
@@ -123,6 +142,106 @@ const Jobs: React.FC = () => {
     await logout();
   };
 
+  const handleApplyClick = (jobId: number) => {
+    setShowApplicationForm(jobId);
+    setFormErrors({});
+    // Preencher automaticamente com dados do usuário se disponível
+    if (user) {
+      setApplicationData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {};
+    
+    if (!applicationData.name.trim()) {
+      errors.name = 'Nome é obrigatório';
+    }
+    
+    if (!applicationData.email.trim()) {
+      errors.email = 'E-mail é obrigatório';
+    } else if (!/\S+@\S+\.\S+/.test(applicationData.email)) {
+      errors.email = 'E-mail inválido';
+    }
+    
+    if (!applicationData.phone.trim()) {
+      errors.phone = 'Telefone é obrigatório';
+    }
+    
+    if (!applicationData.resume) {
+      errors.resume = 'Currículo é obrigatório';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleApplicationSubmit = (jobId: number) => {
+    if (!validateForm()) {
+      return;
+    }
+
+    // Aqui você pode adicionar lógica para enviar o formulário para o backend
+    console.log('Dados da candidatura:', applicationData);
+    setAppliedJobs(prev => [...prev, jobId]);
+    setShowApplicationForm(null);
+    setApplicationData({
+      name: '',
+      email: '',
+      phone: '',
+      resume: null,
+      coverLetter: ''
+    });
+    alert(`Candidatura para a vaga #${jobId} enviada com sucesso!`);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setApplicationData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setApplicationData(prev => ({
+        ...prev,
+        resume: e.target.files![0]
+      }));
+
+      // Limpar erro do arquivo quando um arquivo for selecionado
+      if (formErrors.resume) {
+        setFormErrors(prev => {
+          const newErrors = {...prev};
+          delete newErrors.resume;
+          return newErrors;
+        });
+      }
+    }
+  };
+
+  const toggleDetails = (jobId: number) => {
+    if (showDetails === jobId) {
+      setShowDetails(null);
+    } else {
+      setShowDetails(jobId);
+    }
+  };
+
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = 
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,12 +268,12 @@ const Jobs: React.FC = () => {
 
   return (
     <div className="jobs-container">
-      {/* Header */}
+      {/* Header com cor laranja */}
       <header className="jobs-header">
         <div className="jobs-header-content">
           <div>
             <h1>Vagas Disponíveis</h1>
-            <p>Bem-vindo, {user?.name}</p>
+            <p className="welcome-text">Bem-vindo, {user?.name}</p>
           </div>
           <div className="jobs-header-actions">
             <span className="badge badge-user">Usuário</span>
@@ -277,23 +396,45 @@ const Jobs: React.FC = () => {
                 
                 <p className="job-description">{job.description}</p>
                 
-                <div className="requirements">
-                  <h4>Requisitos e Competências:</h4>
-                  <div className="tags">
-                    {job.requirements.map((req, index) => (
-                      <span key={index} className="tag">{req}</span>
-                    ))}
+                {showDetails === job.id && (
+                  <div className="job-full-details">
+                    <div className="requirements">
+                      <h4>Requisitos e Competências:</h4>
+                      <div className="tags">
+                        {job.requirements.map((req, index) => (
+                          <span key={index} className="tag">{req}</span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
               
               <div className="job-footer">
                 <span className="post-date">
                   <i className="fas fa-clock"></i> Publicada em {new Date(job.created_at).toLocaleDateString('pt-BR')}
                 </span>
-                <button className="btn-apply">
-                  <i className="fas fa-paper-plane"></i> Candidatar-se
-                </button>
+                <div className="job-actions">
+                  <button 
+                    className="btn-details"
+                    onClick={() => toggleDetails(job.id)}
+                  >
+                    <i className={`fas ${showDetails === job.id ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i> 
+                    {showDetails === job.id ? 'Menos Detalhes' : 'Mais Detalhes'}
+                  </button>
+                  {appliedJobs.includes(job.id) ? (
+                    <button className="btn-applied" disabled>
+                      <i className="fas fa-check"></i> Candidatura Enviada
+                    </button>
+                  ) : (
+                    <button 
+                      className="btn-apply"
+                      onClick={() => handleApplyClick(job.id)}
+                    >
+                      <i className="fas fa-paper-plane"></i> Candidatar-se
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -304,6 +445,142 @@ const Jobs: React.FC = () => {
             <i className="fas fa-search"></i>
             <h3>Nenhuma vaga encontrada</h3>
             <p>Tente ajustar os filtros ou os termos de busca.</p>
+          </div>
+        )}
+
+        {/* Formulário de Candidatura - Aparece como uma view separada na mesma página */}
+        {showApplicationForm && (
+          <div className="application-view">
+            <div className="application-container">
+              <div className="application-header">
+                <h2>
+                  <i className="fas fa-paper-plane"></i>
+                  Candidatar-se à Vaga
+                </h2>
+                <button 
+                  className="btn-close-application"
+                  onClick={() => setShowApplicationForm(null)}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+
+              <div className="application-content">
+                <div className="job-preview">
+                  <h3>{jobs.find(job => job.id === showApplicationForm)?.title}</h3>
+                  <p>
+                    <i className="fas fa-building"></i>
+                    {jobs.find(job => job.id === showApplicationForm)?.company}
+                  </p>
+                  <p>
+                    <i className="fas fa-map-marker-alt"></i>
+                    {jobs.find(job => job.id === showApplicationForm)?.location}
+                  </p>
+                </div>
+
+                <form className="application-form" onSubmit={(e) => e.preventDefault()}>
+                  <div className="form-section">
+                    <h3>Informações Pessoais</h3>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="name">Nome Completo *</label>
+                        <input
+                          type="text"
+                          id="name"
+                          name="name"
+                          value={applicationData.name}
+                          onChange={handleInputChange}
+                          className={formErrors.name ? 'error' : ''}
+                          required
+                        />
+                        {formErrors.name && <span className="error-message">{formErrors.name}</span>}
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="email">E-mail *</label>
+                        <input
+                          type="email"
+                          id="email"
+                          name="email"
+                          value={applicationData.email}
+                          onChange={handleInputChange}
+                          className={formErrors.email ? 'error' : ''}
+                          required
+                        />
+                        {formErrors.email && <span className="error-message">{formErrors.email}</span>}
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="phone">Telefone *</label>
+                      <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        value={applicationData.phone}
+                        onChange={handleInputChange}
+                        className={formErrors.phone ? 'error' : ''}
+                        required
+                      />
+                      {formErrors.phone && <span className="error-message">{formErrors.phone}</span>}
+                    </div>
+                  </div>
+
+                  <div className="form-section">
+                    <h3>Documentos</h3>
+                    <div className="form-group">
+                      <label htmlFor="resume">Currículo (PDF, DOC ou DOCX) *</label>
+                      <div className="file-upload">
+                        <input
+                          type="file"
+                          id="resume"
+                          name="resume"
+                          onChange={handleFileChange}
+                          accept=".pdf,.doc,.docx"
+                          required
+                        />
+                        <label htmlFor="resume" className={`file-upload-label ${formErrors.resume ? 'error' : ''}`}>
+                          <i className="fas fa-upload"></i>
+                          {applicationData.resume ? applicationData.resume.name : 'Selecionar arquivo'}
+                        </label>
+                        {formErrors.resume && <span className="error-message">{formErrors.resume}</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-section">
+                    <h3>Carta de Apresentação</h3>
+                    <div className="form-group">
+                      <label htmlFor="coverLetter">Por que você é a pessoa ideal para esta vaga?</label>
+                      <textarea
+                        id="coverLetter"
+                        name="coverLetter"
+                        value={applicationData.coverLetter}
+                        onChange={handleInputChange}
+                        rows={5}
+                        placeholder="Descreva suas experiências, habilidades e por que você se encaixa perfeitamente para esta posição..."
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <div className="form-actions">
+                    <button 
+                      type="button"
+                      className="btn-cancel"
+                      onClick={() => setShowApplicationForm(null)}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit"
+                      className="btn-submit-application"
+                      onClick={() => handleApplicationSubmit(showApplicationForm)}
+                    >
+                      <i className="fas fa-paper-plane"></i>
+                      Enviar Candidatura
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         )}
       </main>
