@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { socialAuthService } from '../services/socialAuth';
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, socialLogin } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -76,17 +76,27 @@ const Login: React.FC = () => {
 
     try {
       await login(email, password);
-      // O redirecionamento será feito automaticamente pelo contexto
-      // baseado no role do usuário
+      // A função login do AuthContext já cuida do redirecionamento
+      // baseado no papel do usuário (admin ou user)
     } catch (err: any) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.data?.errors) {
-        const errorMessages = Object.values(err.response.data.errors).flat();
-        setError(errorMessages.join(', '));
-      } else {
-        setError('Credenciais inválidas. Tente novamente.');
+      console.error('Erro no login:', err);
+      
+      let errorMessage = 'Credenciais inválidas. Tente novamente.';
+      
+      if (err.response) {
+        if (err.response.status === 401) {
+          errorMessage = 'Email ou senha incorretos.';
+        } else if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data?.errors) {
+          const errorMessages = Object.values(err.response.data.errors).flat();
+          errorMessage = errorMessages.join(', ');
+        }
+      } else if (err.request) {
+        errorMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão.';
       }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -110,16 +120,38 @@ const Login: React.FC = () => {
     try {
       setIsSocialLoading(true);
       setError('');
+      
+      // 1. Autenticar com o Firebase
       const socialUser = await socialAuthService.smartSignInWithGoogle();
-      if (socialUser) {
-        // Processar login social
-        const response = await socialAuthService.quickSocialLogin(socialUser);
-        // O contexto de autenticação será atualizado automaticamente
-        // através do localStorage que já foi definido no quickSocialLogin
-        window.location.reload(); // Recarregar para atualizar o contexto
+      if (!socialUser) {
+        // Redirecionamento em andamento
+        return;
       }
+      
+      // 2. Format user data for social login
+      const userData = {
+        name: socialUser.displayName,
+        email: socialUser.email,
+        password: socialUser.uid, // Using UID as password for social login
+        password_confirmation: socialUser.uid,
+        provider: socialUser.provider || 'google',
+        provider_id: socialUser.uid
+      };
+      
+      // 3. Usar o método socialLogin do AuthContext
+      await socialLogin(userData);
+      
     } catch (err: any) {
-      setError(err?.message || 'Erro no login com Google');
+      console.error('Erro na autenticação social:', err);
+      setError(err?.message || 'Erro ao fazer login com Google. Tente novamente.');
+      
+      // Tenta fazer logout do Firebase em caso de erro
+      try {
+        const { auth } = await import('../config/firebase');
+        await auth.signOut();
+      } catch (signOutError) {
+        console.error('Erro ao fazer logout:', signOutError);
+      }
     } finally {
       setIsSocialLoading(false);
     }

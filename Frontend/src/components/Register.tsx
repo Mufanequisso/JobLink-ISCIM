@@ -5,6 +5,8 @@ import * as yup from 'yup';
 import { User, Mail, Lock, Phone, GraduationCap, Calendar, UserCheck, FileText, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
+import { socialAuthService } from '../services/socialAuth';
+import { auth } from '../config/firebase';
 
 // Schema de validação
 const schema = yup.object({
@@ -36,6 +38,7 @@ const employmentStatusOptions = [
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
@@ -95,6 +98,88 @@ const Register: React.FC = () => {
       setError(err.message || 'Erro ao realizar cadastro. Tente novamente.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Gera uma senha segura para contas sociais
+  const socialPassword = (uid: string): string => {
+    return `social_${uid}_${process.env.REACT_APP_SOCIAL_SECRET || 'default_secret'}`;
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      setError('');
+      setSuccess('');
+      
+      // 1. Primeiro tenta autenticar com o Firebase
+      let socialUser;
+      try {
+        socialUser = await socialAuthService.smartSignInWithGoogle();
+        if (!socialUser) {
+          // Redirecionamento em andamento
+          return;
+        }
+      } catch (error) {
+        console.error('Erro ao autenticar com Google:', error);
+        throw new Error('Falha ao conectar com o Google. Por favor, tente novamente.');
+      }
+      
+      // 2. Tenta registrar/login no backend
+      try {
+        // Tenta registrar/login usando o serviço de autenticação social
+        const response = await socialAuthService.registerSocialUser(socialUser);
+        
+        if (response?.token) {
+          // Se chegou aqui, o login foi bem-sucedido
+          setSuccess('Login realizado com sucesso! Redirecionando...');
+          // Recarrega a página para atualizar o estado de autenticação
+          window.location.href = '/';
+          return;
+        }
+      } catch (backendError) {
+        console.error('Erro no backend:', backendError);
+        // Se falhar, tenta o método alternativo
+        try {
+          const userData = {
+            name: socialUser.displayName,
+            email: socialUser.email,
+            password: socialPassword(socialUser.uid),
+            password_confirmation: socialPassword(socialUser.uid),
+            is_social: true
+          };
+          
+          // Tenta registrar
+          await authService.register(userData);
+          
+          // Tenta fazer login
+          await authService.login({
+            email: socialUser.email,
+            password: socialPassword(socialUser.uid)
+          });
+          
+          setSuccess('Conta criada com sucesso! Redirecionando...');
+          window.location.href = '/';
+          return;
+          
+        } catch (registerError) {
+          console.error('Erro ao registrar:', registerError);
+          throw new Error('Não foi possível completar o cadastro. Por favor, tente novamente.');
+        }
+      }
+      
+    } catch (error: any) {
+      console.error('Erro ao autenticar com Google:', error);
+      setError(error.message || 'Erro ao autenticar com Google. Por favor, tente novamente.');
+      
+      // Tenta fazer logout do Firebase em caso de erro
+      try {
+        await auth.signOut();
+      } catch (signOutError) {
+        console.error('Erro ao fazer logout:', signOutError);
+      }
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -389,7 +474,7 @@ const Register: React.FC = () => {
             )}
 
             {/* Botão de Submit */}
-            <div className="pt-4">
+            <div className="space-y-4 pt-4">
               <button
                 type="submit"
                 disabled={isLoading}
@@ -406,6 +491,40 @@ const Register: React.FC = () => {
                     Criar Conta
                     <UserCheck className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform duration-200" />
                   </span>
+                )}
+              </button>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">ou continue com</span>
+                </div>
+              </div>
+
+              {/* Google Sign In Button */}
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading}
+                className="w-full flex items-center justify-center py-3 px-6 border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 transition-all duration-200"
+              >
+                {isGoogleLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
+                    Entrando...
+                  </div>
+                ) : (
+                  <>
+                    <img 
+                      src="https://www.google.com/favicon.ico" 
+                      alt="Google" 
+                      className="w-5 h-5 mr-3"
+                    />
+                    <span>Continuar com Google</span>
+                  </>
                 )}
               </button>
             </div>
