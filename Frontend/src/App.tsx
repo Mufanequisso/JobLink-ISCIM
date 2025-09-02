@@ -7,6 +7,7 @@ import AdminDashboard from './components/AdminDashboard';
 import Jobs from './components/Jobs';
 import './App.css';
 
+
 function App() {
   return (
     <AuthProvider>
