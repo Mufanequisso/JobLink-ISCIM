@@ -3,7 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area 
 } from 'recharts';
-import { Users, UserCheck, Shield, Calendar, TrendingUp, Activity } from 'lucide-react';
+import { Users, UserCheck, Shield, Calendar, TrendingUp, Activity, Edit2, Trash2, ToggleLeft, ToggleRight, Check, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import adminService from '../services/adminService';
 import type { User, AdminUserUpdate } from '../services/adminService';
@@ -404,24 +404,41 @@ const AdminDashboard: React.FC = () => {
                         <button 
                           onClick={() => handleEditUser(u)} 
                           disabled={actionLoading === u.id}
-                          className="text-orange-600 hover:text-orange-900 font-medium"
+                          className="p-2 rounded-full text-blue-600 hover:bg-blue-100 transition-colors duration-200"
+                          title="Editar usuário"
                         >
-                          Editar
+                          <Edit2 className="w-5 h-5" />
                         </button>
                         <button 
                           onClick={() => handleToggleStatus(u.id)} 
                           disabled={actionLoading === u.id}
-                          className={`font-medium ${u.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
+                          className={`p-2 rounded-full transition-colors duration-200 ${
+                            u.is_active 
+                              ? 'text-red-600 hover:bg-red-100' 
+                              : 'text-green-600 hover:bg-green-100'
+                          }`}
+                          title={u.is_active ? 'Desativar usuário' : 'Ativar usuário'}
                         >
-                          {actionLoading === u.id ? '...' : (u.is_active ? 'Desativar' : 'Ativar')}
+                          {actionLoading === u.id ? (
+                            <span className="w-5 h-5 flex items-center justify-center">...</span>
+                          ) : u.is_active ? (
+                            <ToggleLeft className="w-5 h-5 text-red-600" />
+                          ) : (
+                            <ToggleRight className="w-5 h-5 text-green-600" />
+                          )}
                         </button>
                         {u.role !== 'admin' && (
                           <button 
                             onClick={() => handleDeleteUser(u.id)} 
                             disabled={actionLoading === u.id}
-                            className="text-red-600 hover:text-red-900 font-medium"
+                            className="p-2 rounded-full text-red-600 hover:bg-red-100 transition-colors duration-200"
+                            title="Excluir usuário"
                           >
-                            {actionLoading === u.id ? '...' : 'Deletar'}
+                            {actionLoading === u.id ? (
+                              <span className="w-5 h-5 flex items-center justify-center">...</span>
+                            ) : (
+                              <Trash2 className="w-5 h-5" />
+                            )}
                           </button>
                         )}
                       </div>
