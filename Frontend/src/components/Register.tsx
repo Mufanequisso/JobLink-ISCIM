@@ -124,8 +124,12 @@ const Register: React.FC = () => {
       <div className="max-w-4xl w-full space-y-8 relative z-10">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-500/25">
-            <UserCheck className="w-10 h-10 text-white" />
+          <div className="mx-auto w-32 h-32 mb-6 flex items-center justify-center">
+            <img 
+              src="/img/logo.png" 
+              alt="Logo JobLink ISCIM" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-2">
             Junte-se a nós
