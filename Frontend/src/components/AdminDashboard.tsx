@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
+import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area 
+  BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { Users, UserCheck, Shield, Calendar, TrendingUp, Activity, Edit2, Trash2, ToggleLeft, ToggleRight, Check, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -32,15 +32,15 @@ const AdminDashboard: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('30'); // dias
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
-  
+
   // Pagination logic
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(users.length / usersPerPage);
-  
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-  
+
   const tableRef = useRef<HTMLTableElement>(null);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const { registrationData, loginData, roleData, statusData } = prepareChartData();
-  
+
   // Ensure we have users before trying to paginate
   if (users.length > 0 && currentUsers.length === 0) {
     setCurrentPage(1); // Reset to first page if current page is empty
@@ -77,7 +77,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleUpdateUser = async (data: AdminUserUpdate) => {
     if (!editingUser) return;
-    
+
     try {
       setActionLoading(editingUser.id);
       await adminService.updateUser(editingUser.id, data);
@@ -86,34 +86,34 @@ const AdminDashboard: React.FC = () => {
       setEditingUser(null);
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
-    } finally { 
-      setActionLoading(null); 
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleToggleStatus = async (userId: number) => {
-    try { 
-      setActionLoading(userId); 
+    try {
+      setActionLoading(userId);
       await adminService.toggleUserStatus(userId);
-      await fetchUsers(); 
-    } catch (error) { 
-      console.error('Erro ao alterar status:', error); 
-    } finally { 
-      setActionLoading(null); 
+      await fetchUsers();
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleDeleteUser = async (userId: number) => {
     if (!window.confirm('Tem certeza que deseja excluir este usuário?')) return;
-    
-    try { 
-      setActionLoading(userId); 
+
+    try {
+      setActionLoading(userId);
       await adminService.deleteUser(userId);
-      await fetchUsers(); 
-    } catch (error) { 
-      console.error('Erro ao deletar usuário:', error); 
-    } finally { 
-      setActionLoading(null); 
+      await fetchUsers();
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -133,9 +133,9 @@ const AdminDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <img 
-                src="/img/logo.png" 
-                alt="Logo JobLink ISCIM" 
+              <img
+                src="/img/logo.png"
+                alt="Logo JobLink ISCIM"
                 className="h-12 w-auto mr-4"
               />
               <div>
@@ -152,8 +152,8 @@ const AdminDashboard: React.FC = () => {
                   Administrador
                 </span>
               </div>
-              <button 
-                onClick={handleLogout} 
+              <button
+                onClick={handleLogout}
                 className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-lg"
               >
                 Sair
@@ -229,8 +229,8 @@ const AdminDashboard: React.FC = () => {
               Período de Análise
             </h3>
             <div className="relative">
-              <select 
-                value={selectedPeriod} 
+              <select
+                value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
                 className="appearance-none pl-4 pr-10 py-2 bg-white border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-800 cursor-pointer"
               >
@@ -241,7 +241,7 @@ const AdminDashboard: React.FC = () => {
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-orange-600">
                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                 </svg>
               </div>
             </div>
@@ -257,14 +257,14 @@ const AdminDashboard: React.FC = () => {
               <AreaChart data={registrationData}>
                 <defs>
                   <linearGradient id="colorRegistros" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8} />
+                    <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="date" stroke="#666" />
                 <YAxis stroke="#666" />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{
                     backgroundColor: 'white',
                     border: `2px solid ${COLORS.primary}`,
@@ -272,13 +272,13 @@ const AdminDashboard: React.FC = () => {
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="registros" 
+                <Area
+                  type="monotone"
+                  dataKey="registros"
                   stroke={COLORS.primary}
                   strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorRegistros)" 
+                  fillOpacity={1}
+                  fill="url(#colorRegistros)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -292,7 +292,7 @@ const AdminDashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="mes" stroke="#666" />
                 <YAxis stroke="#666" />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{
                     backgroundColor: 'white',
                     border: `2px solid ${COLORS.primaryDark}`,
@@ -300,8 +300,8 @@ const AdminDashboard: React.FC = () => {
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                 />
-                <Bar 
-                  dataKey="logins" 
+                <Bar
+                  dataKey="logins"
                   fill={COLORS.primaryDark}
                   radius={[4, 4, 0, 0]}
                 />
@@ -318,19 +318,20 @@ const AdminDashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
-                  data={roleData}
+                  data={statusData}
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
-                  label={({ name, value, percent }: { name: string; value: number; percent: number }) => 
-                    `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
+                  label={({ name, value, percent }: { name?: string; value?: number; percent?: number }) =>
+                    `${name ?? ""}: ${value ?? 0} (${((percent ?? 0) * 100).toFixed(0)}%)`
                   }
                 >
-                  {roleData.map((entry, index) => (
+                  {statusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
+
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
@@ -347,14 +348,15 @@ const AdminDashboard: React.FC = () => {
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
-                  label={({ name, value, percent }: { name: string; value: number; percent: number }) => 
-                    `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
+                  label={({ name, value, percent }: { name?: string; value?: number; percent?: number }) =>
+                    `${name ?? ""}: ${value ?? 0} (${((percent ?? 0) * 100).toFixed(0)}%)`
                   }
                 >
                   {statusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
+
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
@@ -372,7 +374,7 @@ const AdminDashboard: React.FC = () => {
               Total: {users.length} usuários
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-orange-50 to-orange-100">
@@ -409,22 +411,21 @@ const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button 
-                          onClick={() => handleEditUser(u)} 
+                        <button
+                          onClick={() => handleEditUser(u)}
                           disabled={actionLoading === u.id}
                           className="p-2 rounded-full text-blue-600 hover:bg-blue-100 transition-colors duration-200"
                           title="Editar usuário"
                         >
                           <Edit2 className="w-5 h-5" />
                         </button>
-                        <button 
-                          onClick={() => handleToggleStatus(u.id)} 
+                        <button
+                          onClick={() => handleToggleStatus(u.id)}
                           disabled={actionLoading === u.id}
-                          className={`p-2 rounded-full transition-colors duration-200 ${
-                            u.is_active 
-                              ? 'text-red-600 hover:bg-red-100' 
-                              : 'text-green-600 hover:bg-green-100'
-                          }`}
+                          className={`p-2 rounded-full transition-colors duration-200 ${u.is_active
+                            ? 'text-red-600 hover:bg-red-100'
+                            : 'text-green-600 hover:bg-green-100'
+                            }`}
                           title={u.is_active ? 'Desativar usuário' : 'Ativar usuário'}
                         >
                           {actionLoading === u.id ? (
@@ -436,8 +437,8 @@ const AdminDashboard: React.FC = () => {
                           )}
                         </button>
                         {u.role !== 'admin' && (
-                          <button 
-                            onClick={() => handleDeleteUser(u.id)} 
+                          <button
+                            onClick={() => handleDeleteUser(u.id)}
                             disabled={actionLoading === u.id}
                             className="p-2 rounded-full text-red-600 hover:bg-red-100 transition-colors duration-200"
                             title="Excluir usuário"
@@ -455,7 +456,7 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </tbody>
             </table>
-            
+
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
@@ -501,7 +502,7 @@ const AdminDashboard: React.FC = () => {
                     >
                       Anterior
                     </button>
-                    
+
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
                       if (totalPages <= 5) {
@@ -513,22 +514,21 @@ const AdminDashboard: React.FC = () => {
                       } else {
                         pageNum = currentPage - 2 + i;
                       }
-                      
+
                       return (
                         <button
                           key={pageNum}
                           onClick={() => paginate(pageNum)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === pageNum
-                              ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
-                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                          }`}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === pageNum
+                            ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
                         >
                           {pageNum}
                         </button>
                       );
                     })}
-                    
+
                     <button
                       onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
                       disabled={currentPage === totalPages}
@@ -571,9 +571,9 @@ const AdminDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Função</label>
-                    <select 
-                      name="role" 
-                      defaultValue={editingUser.role} 
+                    <select
+                      name="role"
+                      defaultValue={editingUser.role}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     >
                       <option value="user">Usuário</option>
@@ -582,9 +582,9 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select 
-                      name="is_active" 
-                      defaultValue={editingUser.is_active.toString()} 
+                    <select
+                      name="is_active"
+                      defaultValue={editingUser.is_active.toString()}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     >
                       <option value="true">Ativo</option>
@@ -593,25 +593,25 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Observações do Admin</label>
-                    <textarea 
-                      name="admin_notes" 
-                      defaultValue={editingUser.admin_notes || ''} 
-                      rows={3} 
+                    <textarea
+                      name="admin_notes"
+                      defaultValue={editingUser.admin_notes || ''}
+                      rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="Adicione observações sobre este usuário..."
                     />
                   </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-8">
-                  <button 
-                    type="button" 
-                    onClick={() => { setShowEditModal(false); setEditingUser(null); }} 
+                  <button
+                    type="button"
+                    onClick={() => { setShowEditModal(false); setEditingUser(null); }}
                     className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors duration-200"
                   >
                     Cancelar
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={actionLoading === editingUser.id}
                     className="px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-lg transition-all duration-200 disabled:opacity-50"
                   >
