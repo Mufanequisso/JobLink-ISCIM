@@ -11,6 +11,7 @@ interface AuthContextType {
   socialLogin: (userData: any) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  updateUser: (userData: Partial<User>) => void; // Adicione esta linha
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,6 +34,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
+
+  // Adicione esta função
+  const updateUser = (userData: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...userData } : null);
+    
+    // Atualize também no localStorage para persistência
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const currentUser = JSON.parse(storedUser);
+      const updatedUser = { ...currentUser, ...userData };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -110,6 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     socialLogin,
     logout,
     loading,
+    updateUser, // Adicione esta linha
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
